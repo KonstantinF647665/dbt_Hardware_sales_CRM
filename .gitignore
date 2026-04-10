@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+
+.vscode/
+.idea/
+
+target/
+dbt_packages/
+logs/
+
+.env
+profiles.yml

@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: raw_crm
+    database: crm_db
+    schema: raw
+    tables:
+      - name: accounts
+      - name: products
+      - name: sales_teams
+      - name: opportunities
+      - name: sales_pipeline

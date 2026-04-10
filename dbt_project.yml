@@ -1,0 +1,19 @@
+name: 'crm_analysis'
+version: '1.0.0'
+config-version: 2
+
+profile: 'crm_project_profile'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analysis"]
+
+models:
+  crm_analysis:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table
