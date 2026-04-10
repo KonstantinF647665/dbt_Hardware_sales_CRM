@@ -2,27 +2,27 @@ WITH sales AS (
     SELECT * FROM {{ref("stg_opportunities")}}
 ),
 sales_teams AS (
-    SELECT Имя_агента, Руководитель_агента FROM {{ref("stg_sales_teams")}}
+    SELECT agent_name, agent_manager FROM {{ref("stg_sales_teams")}}
 ),
 suggested_price AS (
-    SELECT Название_продукта, Прогнозная_стоимость_товара FROM {{ref("stg_products")}}
+    SELECT product_name, suggested_price FROM {{ref("stg_products")}}
 ),
 accounts AS (
-    SELECT Название_компании, Отрасль
+    SELECT account_name, industry
     FROM {{ref("stg_accounts")}}
 )
-SELECT sales.Идентификатор_сделки,
-sales.Имя_агента,
-sales.Название_продукта,
-sales.Название_компании,
-sales.Статус_сделки,
-sales.Активная_стадия_с,
-sales.Работа_по_сделке_окончена,
-sales.Цена_сделки,
-suggested_price.Прогнозная_стоимость_товара,
-sales_teams.Руководитель_агента,
-accounts.Отрасль Сфера_деятельности_компании
+SELECT sales.deal_id,
+sales.agent_name,
+sales.product_name,
+sales.account_name,
+sales.deal_stage,
+sales.engage_date,
+sales.close_date,
+sales.deal_value,
+suggested_price.suggested_price,
+sales_teams.agent_manager,
+accounts.industry
 FROM sales
-LEFT JOIN sales_teams ON sales.Имя_агента = sales_teams.Имя_агента
-LEFT JOIN suggested_price ON sales.Название_продукта = suggested_price.Название_продукта
-LEFT JOIN accounts ON sales.Название_компании = accounts.Название_компании
+LEFT JOIN sales_teams ON sales.agent_name = sales_teams.agent_name
+LEFT JOIN suggested_price ON sales.product_name = suggested_price.product_name
+LEFT JOIN accounts ON sales.account_name = accounts.account_name

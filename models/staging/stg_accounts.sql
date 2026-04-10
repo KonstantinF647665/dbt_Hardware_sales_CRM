@@ -1,4 +1,4 @@
-select COALESCE(NULLIF(TRIM(LOWER(account)), ''), '0') Название_компании,
+select COALESCE(NULLIF(TRIM(LOWER(account)), ''), '0') account_name,
 CASE 
     WHEN TRIM(sector) LIKE 'technology' THEN 'Технологии'
     WHEN TRIM(sector) LIKE 'technolgy' THEN 'Технологии'
@@ -12,10 +12,10 @@ CASE
     WHEN TRIM(sector) LIKE 'marketing' THEN 'Маркетинг'
     WHEN TRIM(sector) LIKE 'employment' THEN 'Рекрутинг'
     ELSE 'Другое'
-End Отрасль,
-(year_established || '-01-01')::date Дата_основания,
-revenue Годовой_доход_млн_долларов,
-employees Количество_работников,
-TRIM(LOWER(office_location)) Адрес_компании,
-COALESCE(NULLIF(LOWER(TRIM(subsidiary_of)), ''), '0') Головное_предприятие
+End industry,
+(year_established || '-01-01')::date,
+revenue annual_revenue,
+employees employee_count,
+TRIM(LOWER(office_location)),
+COALESCE(NULLIF(LOWER(TRIM(subsidiary_of)), ''), '0') parent_account
 from {{ ref('accounts') }}

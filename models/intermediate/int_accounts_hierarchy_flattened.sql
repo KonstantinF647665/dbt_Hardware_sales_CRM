@@ -5,12 +5,12 @@ processed AS (
     SELECT 
         *,
         CASE 
-            WHEN Головное_предприятие IS NULL 
-                 OR Головное_предприятие IN ('0', '') 
-            THEN Название_компании 
-            ELSE Головное_предприятие 
-        END AS Итоговое_название_группы
+            WHEN parent_account IS NULL 
+                 OR parent_account IN ('0', '') 
+            THEN account_name 
+            ELSE parent_account 
+        END AS ultimate_parent_name
     FROM accounts
 )
 SELECT * FROM processed
-WHERE Итоговое_название_группы != '0'
+WHERE ultimate_parent_name != '0'

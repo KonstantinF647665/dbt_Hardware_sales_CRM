@@ -1,20 +1,20 @@
 WITH deals_with_offices AS (
     SELECT 
-        o.Цена_сделки,
-        o.Статус_сделки,
-        t.Отделение,
-        o.Имя_агента
+        o.deal_value,
+        o.deal_stage,
+        t.regional_office,
+        o.agent_name
     FROM {{ ref('stg_opportunities') }} o
-    LEFT JOIN {{ ref('stg_sales_teams') }} t ON o.Имя_агента = t.Имя_агента
+    LEFT JOIN {{ ref('stg_sales_teams') }} t ON o.agent_name = t.agent_name
 )
 SELECT 
-    Отделение,
-    SUM(Цена_сделки) AS Сумма_сделок,
-    SUM(CASE WHEN Статус_сделки = 'Сделка заключена' THEN 1 ELSE 0 END) AS Всего_заключено,
-    COUNT(DISTINCT Имя_агента) AS Агентов_всего_в_отделении,
-    PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY Цена_сделки) 
-        FILTER (WHERE Цена_сделки > 0) AS Медианная_сумма_сделки_в_отделении,
-    ROUND(AVG(Цена_сделки) FILTER (WHERE Цена_сделки > 0), 2) AS Среднее_арифметическое_сделки
+    regional_office,
+    SUM(deal_value) AS total_deal_value,
+    SUM(CASE WHEN deal_stage = 'Сделка заключена' THEN 1 ELSE 0 END) AS won_deals_overall,
+    COUNT(DISTINCT agent_name) AS agents_at_regional_office,
+    PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY deal_value)
+        FILTER (WHERE deal_value > 0) AS median_deal_value_regional_office,
+    ROUND(AVG(deal_value) FILTER (WHERE deal_value > 0), 2) AS deal_mean
 FROM deals_with_offices
 GROUP BY 1
-ORDER BY Сумма_сделок ASC
+ORDER BY total_deal_value ASC

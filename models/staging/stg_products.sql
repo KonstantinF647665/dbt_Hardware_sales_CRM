@@ -1,4 +1,4 @@
-select LOWER(REPLACE(product::text, ' ', '')) Название_продукта,
-LOWER(TRIM(series::text)) Модель,
-COALESCE(sales_price::numeric, 0) Прогнозная_стоимость_товара
+select LOWER(REPLACE(product::text, ' ', '')) product_name,
+LOWER(TRIM(series::text)) product_series,
+COALESCE(sales_price::numeric, 0) suggested_price
 from {{ ref('products') }}
