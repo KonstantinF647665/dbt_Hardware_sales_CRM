@@ -1,7 +1,7 @@
 WITH opportunities AS (
     SELECT 
         *,
-        (Работа_по_сделке_окончена - Активная_стадия_с) AS Дней_на_сделку
+        (close_date - engage_date) AS days_to_close
     FROM {{ ref('stg_opportunities') }}
 ),
 hierarchy AS (
@@ -9,54 +9,53 @@ hierarchy AS (
 ),
 grouped_metrics AS (
     SELECT 
-        h.Итоговое_название_группы,
-        MIN(h.Дата_основания) AS Дата_основания,
-        SUM(h.Годовой_доход_млн_долларов) AS Общий_годовой_доход,
-        SUM(h.Количество_работников) AS Общее_кол_во_работников,
-        MAX(h.Адрес_компании) AS Адрес_группы,
+        h.ultimate_parent_name,
+        MIN(h.year_established) AS year_established,
+        SUM(h.annual_revenue) AS annual_revenue_companies,
+        SUM(h.employee_count) AS employee_count_companies,
+        MAX(h.office_location) AS office_location,
         COUNT(DISTINCT CASE 
-            WHEN h.Головное_предприятие != h.Название_компании THEN h.Название_компании 
-        END) AS Кол_во_дочерних_компаний,
-        COUNT(DISTINCT o.Имя_агента) AS Кол_во_агентов,
-        COUNT(DISTINCT o.Идентификатор_сделки) AS Кол_во_сделок,
-        COUNT(DISTINCT o.Название_продукта) AS Кол_во_уникальных_продуктов,
-        PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY o.Цена_сделки) FILTER (WHERE o.Цена_сделки > 0) AS Медианная_цена_группы,
-        ROUND(AVG(o.Цена_сделки), 2) AS Средняя_цена_сделки_компания,
-        SUM(CASE WHEN o.Статус_сделки = 'Сделка заключена' THEN 1 ELSE 0 END) AS Заключено_сделок,
-        SUM(CASE WHEN o.Статус_сделки = 'Сделка не состоялась' THEN 1 ELSE 0 END) AS Неудачных_сделок,
-        SUM(CASE WHEN Статус_сделки IN ('Работа с клиентом', 'Разведка') THEN 1 ELSE 0 END) AS Сделок_в_работе,
-        COUNT(Статус_сделки) AS Всего_сделок,
-        SUM(o.Цена_сделки) AS Суммарная_цена_сделок,
-        SUM(o.Дней_на_сделку) AS Дней_на_сделку_суммарно,
+            WHEN h.parent_account != h.account_name THEN h.account_name 
+        END) AS number_of_subsidiaries,
+        COUNT(DISTINCT o.agent_name) AS agents_count,
+        COUNT(DISTINCT o.deal_id) AS deal_count,
+        COUNT(DISTINCT o.product_name) AS number_of_unique_products,
+        PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY o.deal_value) FILTER (WHERE o.deal_value > 0) AS median_deal_value_group,
+        ROUND(AVG(o.deal_value), 2) AS avg_deal_value_companies,
+        SUM(CASE WHEN o.deal_stage = 'Сделка заключена' THEN 1 ELSE 0 END) AS won_deals,
+        SUM(CASE WHEN o.deal_stage = 'Сделка не состоялась' THEN 1 ELSE 0 END) AS lost_deals,
+        SUM(CASE WHEN deal_stage IN ('Работа с клиентом', 'Разведка') THEN 1 ELSE 0 END) AS engage_state_deals,
+        COUNT(deal_stage) AS all_deals,
+        SUM(o.deal_value) AS all_deals_value,
+        SUM(o.days_to_close) AS days_to_close,
         ROUND(
-            SUM(CASE WHEN o.Статус_сделки = 'Сделка заключена' THEN 1 ELSE 0 END)* 1.0 / NULLIF(COUNT(Статус_сделки), 0)
-            ,2) Конверсия_в_группе_компаний
+            SUM(CASE WHEN o.deal_stage = 'Сделка заключена' THEN 1 ELSE 0 END)* 1.0 / NULLIF(COUNT(deal_stage), 0)
+            ,2) conversion_in_a_group
     FROM hierarchy h
-    LEFT JOIN opportunities o ON o.Название_компании = h.Название_компании
-    GROUP BY h.Итоговое_название_группы
+    LEFT JOIN opportunities o ON o.account_name = h.account_name
+    GROUP BY h.ultimate_parent_name
 )
 SELECT 
-    Итоговое_название_группы AS Название_компании_Группы,
+    ultimate_parent_name AS ultimate_group_name,
     ROUND(
-    ((Суммарная_цена_сделок / (SELECT COALESCE(SUM(Суммарная_цена_сделок),0) FROM grouped_metrics)) *100)
-    ,2) AS Доля_сделок_от_общей_суммы_сделок,
+    ((all_deals_value / (SELECT COALESCE(SUM(all_deals_value),0) FROM grouped_metrics)) *100)
+    ,2) AS part_in_all_deals_value,
     ROUND(
-    (Заключено_сделок / (SELECT COALESCE(SUM(Заключено_сделок),0) FROM grouped_metrics) *100)
-    ,2) AS Доля_сделок_группы_компаний_от_общего_числа_заключенных_сделок,
-    COALESCE(Средняя_цена_сделки_компания, 0) AS Средняя_цена_сделки_группа_компаний,
-    COALESCE(Медианная_цена_группы, 0) AS Медианная_цена_сделки_группа_компаний,
-    Конверсия_в_группе_компаний Конверсия_в_группе_компаний,
-    COALESCE(Суммарная_цена_сделок, 0) AS Сумма_заключенных_сделок_группа,
-    COALESCE(Заключено_сделок, 0) AS Всего_заключено_сделок_группа,
-    COALESCE(Неудачных_сделок, 0) AS Неудачных_сделок_с_группа,
-    COALESCE(Сделок_в_работе, 0) AS Сделок_в_работе_группа,
-    COALESCE(Кол_во_агентов, 0) AS Агентов_работает_по_группе,
-    Общий_годовой_доход AS Годовой_доход_млн_долларов,
-    Общее_кол_во_работников AS Количество_работников,
-    COALESCE(Кол_во_уникальных_продуктов, 0) AS Уникальных_товарных_категорий,
-    ROUND(Дней_на_сделку_суммарно / NULLIF(Кол_во_сделок, 0)) AS Среднее_дней_на_сделку,
-    Дата_основания,
-    Кол_во_дочерних_компаний,
-    Адрес_группы AS Адрес_компании
+    (won_deals / (SELECT COALESCE(SUM(won_deals),0) FROM grouped_metrics) *100)
+    ,2) AS part_in_won_deals,
+    COALESCE(avg_deal_value_companies, 0) AS avg_deal_value_companies,
+    COALESCE(median_deal_value_group, 0) AS median_deal_value_group,
+    conversion_in_a_group conversion_in_a_group,
+    COALESCE(all_deals_value, 0) AS all_deals_value,
+    COALESCE(won_deals, 0) AS won_deals_group,
+    COALESCE(lost_deals, 0) AS lost_deals_group,
+    COALESCE(engage_state_deals, 0) AS engage_state_deals_group,
+    COALESCE(employee_count_companies, 0) AS employee_count_group,
+    annual_revenue_companies AS annual_revenue_companies,
+    COALESCE(number_of_unique_products, 0) AS number_of_bought_unique_products,
+    ROUND(days_to_close / NULLIF(all_deals, 0)) AS avg_days_to_close_deal,
+    year_established,
+    number_of_subsidiaries,
+    office_location AS office_location
 FROM grouped_metrics
-ORDER BY Доля_сделок_от_общей_суммы_сделок DESC
+ORDER BY part_in_all_deals_value DESC

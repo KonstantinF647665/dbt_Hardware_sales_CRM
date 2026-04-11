@@ -13,9 +13,9 @@ CASE
     WHEN TRIM(sector) LIKE 'employment' THEN 'Рекрутинг'
     ELSE 'Другое'
 End industry,
-(year_established || '-01-01')::date,
+(year_established || '-01-01')::date year_established,
 revenue annual_revenue,
 employees employee_count,
-TRIM(LOWER(office_location)),
+TRIM(LOWER(office_location)) office_location,
 COALESCE(NULLIF(LOWER(TRIM(subsidiary_of)), ''), '0') parent_account
 from {{ ref('accounts') }}

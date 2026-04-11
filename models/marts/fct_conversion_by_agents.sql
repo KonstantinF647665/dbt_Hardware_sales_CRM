@@ -1,15 +1,15 @@
 SELECT 
-Имя_агента,
+agent_name,
 ROUND(
-    ((Сумма_сделок_агент / (SELECT COALESCE(SUM(Сумма_сделок_агент),0) FROM {{ref('int_agents_aggr')}})) *100),
-     2) AS Доля_сделок_от_общей_суммы_сделок,
+    ((total_deals_value_agent / (SELECT COALESCE(SUM(total_deals_value_agent),0) FROM {{ref('int_agents_aggr')}})) *100),
+     2) AS value_part_in_total_deals_value,
 ROUND(
-    ((Заключено_сделок_агент / (SELECT COALESCE(SUM(Заключено_сделок_агент),0) FROM {{ref('int_agents_aggr')}})) *100),
-     2) AS Доля_сделок_агента_от_общего_числа_сделок,
-Средняя_цена_сделки_агент,
-Медианная_сумма_сделки_действительная,
+    ((won_deals_agent / (SELECT COALESCE(SUM(won_deals_agent),0) FROM {{ref('int_agents_aggr')}})) *100),
+     2) AS successful_deals_part_in_total_successful_deals,
+avg_deal_value,
+median_deal_value,
 ROUND(
-    (Заключено_сделок_агент * 1.0 / NULLIF(Всего_сделок_агент, 0)) ,
-     2) AS Конверсия_по_агенту
+    (won_deals_agent * 1.0 / NULLIF(total_deals_count_agent, 0)) ,
+     2) AS conversion_by_agent
 FROM {{ref('int_agents_aggr')}}
-ORDER BY Доля_сделок_от_общей_суммы_сделок DESC
+ORDER BY value_part_in_total_deals_value DESC
