@@ -9,6 +9,10 @@ seed-paths: ["seeds"]
 test-paths: ["tests"]
 analysis-paths: ["analysis"]
 
+seeds:
+  crm_analysis:
+    +schema: raw
+
 models:
   crm_analysis:
     staging:

@@ -6,4 +6,4 @@ WHEN LOWER(TRIM(regional_office::text)) LIKE 'east' THEN 'Восточное о�
 WHEN LOWER(TRIM(regional_office::text)) LIKE 'west' THEN 'Западное отделение'
 ELSE 'Другое'
 END regional_office
-from {{ ref('sales_teams') }}
+from {{ source('raw_crm', 'sales_teams') }}

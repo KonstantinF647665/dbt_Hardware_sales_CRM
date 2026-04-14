@@ -1,12 +1,37 @@
 version: 2
 
-sources:
-  - name: raw_crm
-    database: crm_db
-    schema: raw
-    tables:
-      - name: accounts
-      - name: products
-      - name: sales_teams
-      - name: opportunities
-      - name: sales_pipeline
+models:
+  - name: stg_opportunities
+    description: "Слой стейджинга для сделок. Проверим айди сделки, есть ли повторы и пустые значения"
+    columns:
+      - name: deal_id
+        description: "Первичный ключ сделки"
+        tests:
+          - unique
+          - not_null
+          
+      - name: deal_stage
+        description: "Текущий статус сделки"
+        tests:
+          - accepted_values:
+              values: ['Сделка заключена', 'Сделка не состоялась', 'Работа с клиентом', 'Разведка']
+  - name: stg_accounts
+    description: "Слой информации по компаниям-поставщикам. Проверяем повторы и пропуски"
+    columns:
+      - name: account_name
+        description: "Первичный ключ сделки"
+        tests:
+          - unique
+          - not_null
+  - name: stg_sales_teams
+    description: "Слой информации по менеджерам и работникам филиалов. Проверяем пропуски"
+    columns:
+      - name: regional_office
+        tests:
+          - not_null
+      - name: agent_manager
+        tests:
+          - not_null
+      - name: agent_name
+        tests:
+          - not_null

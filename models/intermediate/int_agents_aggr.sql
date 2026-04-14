@@ -9,6 +9,7 @@ agent_totals AS (
     SELECT 
         agent_name,
         SUM(deal_value) AS total_deals_value_agent,
+        SUM({{ convert_to_net('deal_value') }}) AS total_deal_value_net,
         COUNT(deal_stage) AS total_deals_count_agent,
         ROUND(AVG(deal_value) FILTER (WHERE deal_value > 0), 2) AS avg_deal_value,
         PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY deal_value) FILTER (WHERE deal_value > 0) AS median_deal_value,
@@ -33,6 +34,7 @@ agent_success_stats AS (
 )
 SELECT 
     t.agent_name,
+    t.total_deal_value_net,
     t.total_deals_value_agent,
     t.total_deals_count_agent,
     s.margin,

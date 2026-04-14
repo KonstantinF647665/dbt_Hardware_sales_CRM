@@ -15,7 +15,7 @@ CASE
 End industry,
 (year_established || '-01-01')::date year_established,
 revenue annual_revenue,
-employees employee_count,
+COALESCE(employees, 0) employee_count,
 TRIM(LOWER(office_location)) office_location,
 COALESCE(NULLIF(LOWER(TRIM(subsidiary_of)), ''), '0') parent_account
-from {{ ref('accounts') }}
+from {{ source('raw_crm', 'accounts') }}

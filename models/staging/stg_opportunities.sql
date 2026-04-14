@@ -12,4 +12,4 @@ END deal_stage,
 engage_date::date,
 NULLIF(TRIM(close_date::text), ''):: date close_date,
 COALESCE(close_value::numeric, 0) deal_value
-from {{ ref('sales_pipeline') }}
+from {{ source('raw_crm', 'sales_pipeline') }}

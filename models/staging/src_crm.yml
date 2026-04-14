@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: raw_crm
+    database: crm_db
+    schema: raw
+    description: "Сырые данные, загруженные из CSV-файлов"
+    tables:
+      - name: sales_pipeline
+        description: "Лог сделок (основной файл)"
+      - name: accounts
+        description: "Справочник компаний"
+      - name: products
+        description: "Справочник продуктов"
+      - name: sales_teams
+        description: "Данные по менеджерам и командам"
+      - name: data_dictionary
+        description: "Данные по менеджерам и командам"
