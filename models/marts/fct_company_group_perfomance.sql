@@ -14,9 +14,9 @@ grouped_metrics AS (
         SUM(h.annual_revenue) AS annual_revenue_companies,
         SUM(h.employee_count) AS employee_count_companies,
         MAX(h.office_location) AS office_location,
-        COUNT(DISTINCT CASE 
-            WHEN h.parent_account != h.account_name THEN h.account_name 
-        END) AS number_of_subsidiaries,
+--        COUNT(DISTINCT CASE 
+--            WHEN h.parent_account != h.account_name THEN h.account_name 
+--        END) AS number_of_subsidiaries,
         COUNT(DISTINCT o.agent_name) AS agents_count,
         COUNT(DISTINCT o.deal_id) AS deal_count,
         COUNT(DISTINCT o.product_name) AS number_of_unique_products,
@@ -32,7 +32,7 @@ grouped_metrics AS (
             SUM(CASE WHEN o.deal_stage = 'Сделка заключена' THEN 1 ELSE 0 END)* 1.0 / NULLIF(COUNT(deal_stage), 0)
             ,2) conversion_in_a_group
     FROM hierarchy h
-    LEFT JOIN opportunities o ON o.account_name = h.account_name
+    LEFT JOIN opportunities o ON o.account_name = h.ultimate_parent_name
     GROUP BY h.ultimate_parent_name
 )
 SELECT 
@@ -55,7 +55,6 @@ SELECT
     COALESCE(number_of_unique_products, 0) AS number_of_bought_unique_products,
     ROUND(days_to_close / NULLIF(all_deals, 0)) AS avg_days_to_close_deal,
     year_established,
-    number_of_subsidiaries,
     office_location AS office_location
 FROM grouped_metrics
 ORDER BY part_in_all_deals_value DESC

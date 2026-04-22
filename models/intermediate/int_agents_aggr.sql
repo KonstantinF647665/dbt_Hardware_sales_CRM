@@ -10,6 +10,15 @@ agent_totals AS (
         agent_name,
         SUM(deal_value) AS total_deals_value_agent,
         SUM({{ convert_to_net('deal_value') }}) AS total_deal_value_net,
+        SUM(deal_value - suggested_price) FILTER (WHERE deal_stage = 'Сделка заключена') AS margin,
+        ROUND(
+            AVG(deal_value - suggested_price) FILTER (WHERE deal_stage = 'Сделка заключена'), 
+            3) AS typical_diverson,
+        ROUND(
+            AVG(
+                (deal_value - suggested_price) / NULLIF(suggested_price, 0)) FILTER (WHERE deal_stage = 'Сделка заключена') 
+            * 100,
+             2) AS percent_of_mistakes,
         COUNT(deal_stage) AS total_deals_count_agent,
         ROUND(AVG(deal_value) FILTER (WHERE deal_value > 0), 2) AS avg_deal_value,
         PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY deal_value) FILTER (WHERE deal_value > 0) AS median_deal_value,
@@ -21,25 +30,15 @@ agent_totals AS (
         ROUND(SUM(close_date - engage_date) / NULLIF(COUNT(DISTINCT deal_id), 0)) AS avg_days_per_deal
     FROM base_info
     GROUP BY 1
-),
-agent_success_stats AS (
-    SELECT 
-        agent_name,
-        SUM(deal_value - suggested_price) AS margin,
-        ROUND(AVG(deal_value - suggested_price), 3) AS typical_diverson,
-        ROUND(AVG((deal_value - suggested_price) / NULLIF(suggested_price, 0)) * 100, 2) AS percent_of_mistakes
-    FROM base_info
-    WHERE deal_stage = 'Сделка заключена'
-    GROUP BY 1
 )
 SELECT 
     t.agent_name,
     t.total_deal_value_net,
     t.total_deals_value_agent,
     t.total_deals_count_agent,
-    s.margin,
-    s.typical_diverson AS typical_diverson_from_the_price_by_one_deal,
-    s.percent_of_mistakes,
+    t.margin,
+    t.typical_diverson AS typical_diverson_from_the_price_by_one_deal,
+    t.percent_of_mistakes,
     t.avg_deal_value,
     t.median_deal_value,
     t.unique_products_count,
@@ -48,5 +47,4 @@ SELECT
     t.engaged_deals_count,
     t.avg_days_per_deal
 FROM agent_totals t
-LEFT JOIN agent_success_stats s ON t.agent_name = s.agent_name
-ORDER BY t.total_deals_value_agent DESC
+ORDER BY t.total_deals_value_agent

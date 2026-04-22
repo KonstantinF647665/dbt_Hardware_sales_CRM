@@ -1,16 +1,7 @@
-WITH accounts AS (
-    SELECT * FROM {{ ref('stg_accounts') }}
-),
-processed AS (
-    SELECT 
-        *,
-        CASE 
-            WHEN parent_account IS NULL 
-                 OR parent_account IN ('0', '') 
-            THEN account_name 
-            ELSE parent_account 
-        END AS ultimate_parent_name
-    FROM accounts
-)
-SELECT * FROM processed
-WHERE ultimate_parent_name != '0'
+SELECT 
+COALESCE(NULLIF(NULLIF(parent_account, '0'), ''), account_name) AS ultimate_parent_name,
+    industry,
+    year_established,
+    annual_revenue,
+    employee_count,
+    office_location FROM {{ ref('stg_accounts') }}

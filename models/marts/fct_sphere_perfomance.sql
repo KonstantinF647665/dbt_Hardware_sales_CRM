@@ -2,8 +2,8 @@ WITH accs_aggregated AS (
     SELECT 
         industry,
         SUM(annual_revenue) AS total_revenue,
-        SUM(employee_count) AS total_employees,
-        COUNT(account_name) AS count_companies
+        SUM(employee_count) AS total_employees
+--        COUNT(account_name) AS count_companies
     FROM {{ref("int_accounts_hierarchy_flattened")}}
     GROUP BY industry
 ),
@@ -55,8 +55,8 @@ SELECT
     COALESCE(acc.total_revenue, 0) AS annual_revenue,
     acc.total_employees AS total_employees,
     COALESCE(opp.count_unique_products, 0) AS count_unique_products,
-    ROUND(COALESCE(opp.avg_days_per_opp, 0)) AS avg_days_per_deal,
-    acc.count_companies AS accounts_in_the_industry
+    ROUND(COALESCE(opp.avg_days_per_opp, 0)) AS avg_days_per_deal
+--    acc.count_companies AS accounts_in_the_industry
 FROM accs_aggregated acc
 LEFT JOIN opps_aggregated opp ON acc.industry = opp.industry
 ORDER BY part_in_total_deals_value DESC
